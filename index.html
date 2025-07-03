@@ -48,17 +48,40 @@
         }
 
         /* Estilos compartilhados entre as telas */
+        .header-main-content { /* Contêiner principal para logo e bloco de texto */
+            display: flex;
+            align-items: center; /* Alinha verticalmente logo e o bloco de texto */
+            justify-content: center; /* Alinha o conteúdo ao centro */
+            gap: 1.5rem; /* Espaçamento entre a logo e o bloco de texto */
+            margin-bottom: 0.5rem; /* Ajusta a margem abaixo do grupo */
+        }
+
+        .header-text-block { /* Estilo para o contêiner do nome e tagline */
+            display: flex;
+            flex-direction: column; /* Organiza os elementos em coluna */
+            align-items: flex-start; /* Alinha o texto à esquerda dentro do bloco */
+            text-align: left; /* Garante alinhamento do texto */
+        }
+
+        .logo-img { /* Estilo específico para a logo */
+            width: 270px;
+            height: 90px;
+            flex-shrink: 0; /* Impede que a imagem encolha */
+        }
+
         .logo-text {
             font-size: 1.5rem;
             font-weight: 700;
             line-height: 1;
             color: #FFD700; /* Ouro */
-            margin-bottom: 0.5rem;
+            margin-bottom: 0; /* Remove margem de baixo para alinhar com a tagline */
         }
         .tagline {
             font-size: 1rem;
             color: #DAA520; /* Ouro um pouco mais suave */
-            margin-bottom: 2rem;
+            margin-top: 0.1rem; /* Diminui um pouco a margem superior */
+            margin-bottom: 2rem; /* Margem original para a tagline em relação ao próximo bloco */
+            line-height: 1.1; /* Diminui o espaço entre as linhas */
         }
         .message-container {
             text-align: left; /* Alinhamento padrão à esquerda para os textos */
@@ -219,9 +242,11 @@
     <div class="screen-container" id="reportScreen">
 
         <div class="mb-10">
-            <img src="logo.png" alt="Logo Lex Juris" width="160" height="160" class="mx-auto mb-4">
-            <div class="logo-text">LEX JURIS</div>
-            <div class="tagline">Assessoria Jurídica</div>
+            <div class="header-main-content"> <img src="logo1.png" alt="Logo Lex Juris" class="logo-img">
+                <div class="header-text-block"> <div class="logo-text"> </div>
+                    <div class="tagline"> </div>
+                </div>
+            </div>
         </div>
 
         <div class="message-container">
@@ -252,7 +277,7 @@
                 <p class="text-xl font-bold text-yellow-300 mb-2" id="detailNome"></p>
                 <p class="text-gray-300"><strong>Telefone:</strong> <span id="detailTelefone" class="text-gray-400"></span></p>
                 <p class="text-gray-300"><strong>Causa Judicial:</strong> <span id="detailCausa" class="text-gray-400"></span></p>
-                <p class="text-gray-300"><strong>  </strong> <span id="detailOutro" class="text-gray-400"></span></p>
+                <p class="text-gray-300"><strong> </strong> <span id="detailOutro" class="text-gray-400"></span></p>
                 <p class="text-gray-300"><strong>Status:</strong> <span id="detailcampo1" class="text-gray-400"></span></p>
                 <p class="text-gray-300"><strong>Data/Hora Registro:</strong> <span id="detailDataHora" class="text-gray-400"></span></p>
 
@@ -284,7 +309,6 @@
             const detailCausa = document.getElementById('detailCausa');
             const detailOutro = document.getElementById('detailOutro');
             const detailcampo1 = document.getElementById('detailcampo1');
-            // REMOVIDOS OS GETELEMENTBYID PARA CAMPO2 A CAMPO5
             const detailDataHora = document.getElementById('detailDataHora');
 
 
@@ -375,8 +399,8 @@
 
             // --- FUNÇÃO PARA EXCLUIR LINHA NA PLANILHA ---
             async function deleteRow(rowIndex, nomeCliente, ordemCliente) {
-                if (!confirm(`Tem certeza que deseja excluir a prospecção de "${nomeCliente}" (Ordem: ${formatarOrdem(ordemCliente)})?`)) { // Use a formatação aqui também
-                    return; // Aborta se o usuário cancelar
+                if (!confirm(`Tem certeza que deseja excluir a prospecção de "${nomeCliente}" (Ordem: ${formatarOrdem(ordemCliente)})?`)) { 
+                    return; 
                 }
 
                 showSpinner();
@@ -388,7 +412,7 @@
                             'Content-Type': 'application/x-www-form-urlencoded',
                         },
                         body: new URLSearchParams({
-                            action: 'deleteRow', // Ação para o Apps Script
+                            action: 'deleteRow', 
                             rowIndex: rowIndex
                         }).toString()
                     });
@@ -403,7 +427,7 @@
 
                     if (result.success) {
                         alert('Registro excluído com sucesso!');
-                        loadReportData(); // Recarrega os dados para remover o card excluído
+                        loadReportData(); 
                     } else {
                         alert('Erro ao excluir o registro: ' + result.message);
                     }
@@ -445,17 +469,14 @@
                             itemDiv.style.cursor = 'pointer'; 
                             itemDiv.setAttribute('data-row-index', item.rowIndex); 
                             
-                            // Armazena todos os dados do item diretamente para facilitar o modal
                             itemDiv.dataset.itemData = JSON.stringify(item);
 
-                            // --- CAMPOS AGORA SÃO TODOS EM MINÚSCULAS ---
-                            const ordem = item.ordem; // Não formatar aqui, formatar na exibição
-                            const nome = item.nome || 'N/A';             
+                            const ordem = item.ordem; 
+                            const nome = item.nome || 'N/A';            
                             const telefone = item.telefone ? formatarTelefoneExibicao(item.telefone) : 'N/A'; 
-                            const causa = item.causa || 'N/A';            
-                            const outro = item.outro || '';               
-                            const campo1Atual = item.campo1 || '';       
-                            // REMOVIDOS OS CAMPOS DE DADOS PARA CAMPO2 A CAMPO5
+                            const causa = item.causa || 'N/A';          
+                            const outro = item.outro || '';             
+                            const campo1Atual = item.campo1 || '';     
                             const dataHora = item.datahora ? new Date(item.datahora).toLocaleString('pt-BR') : 'N/A'; 
 
                             const dropdownHtml = `
@@ -541,7 +562,6 @@
                 detailCausa.textContent = itemData.causa || 'N/A';
                 detailOutro.textContent = itemData.outro || ' ';
                 detailcampo1.textContent = itemData.campo1 || 'Não Definido'; 
-                // REMOVIDOS OS CAMPOS DE DETALHE PARA CAMPO2 A CAMPO5
                 detailDataHora.textContent = itemData.datahora ? new Date(itemData.datahora).toLocaleString('pt-BR') : 'N/A';
 
                 detailsModal.classList.remove('hidden');
