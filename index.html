@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório | Lex Juris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Estilos para a tag html e body para preencher a tela */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Estilos gerais para o contêiner e inputs */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1A1A1A; /* Fundo escuro principal */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alinha o card no topo se ele for muito longo */
+            min-height: 100vh; /* Permite que o body tenha a altura mínima de 100% da tela */
+            padding: 1.5rem; /* Espaçamento ao redor do card */
+            box-sizing: border-box; /* Garante que padding e borda não aumentem o tamanho total */
+            overflow-y: auto; /* Permite rolagem se o conteúdo for maior que a tela */
+            color: #AAAAAA; /* Cor padrão para textos menos importantes ou cinzas */
+        }
+
+        .screen-container {
+            background-color: #2C2C2C; /* Fundo do card mais claro que o body, mas ainda escuro */
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2); /* Sombra ajustada para fundo escuro */
+            padding: 3rem 2rem;
+            max-width: 500px; /* Mantém a largura do formulário */
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+            height: fit-content;
+            margin: auto; /* Centraliza verticalmente se o conteúdo for pequeno */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estilos compartilhados entre as telas */
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #FFD700; /* Ouro */
+            margin-bottom: 0.5rem;
+        }
+        .tagline {
+            font-size: 1rem;
+            color: #DAA520; /* Ouro um pouco mais suave */
+            margin-bottom: 2rem;
+        }
+        .message-container {
+            text-align: left; /* Alinhamento padrão à esquerda para os textos */
+            margin-bottom: 2.5rem;
+        }
+        .main-button {
+            width: 100%;
+            background-color: #DAA520; /* Cor de ouro para o botão */
+            color: #1A1A1A; /* Texto do botão em cor escura */
+            font-weight: 700;
+            padding: 1.2rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .main-button:hover {
+            background-color: #FFD700; /* Efeito hover mais claro para ouro */
+            transform: translateY(-2px);
+        }
+
+        /* Estilos específicos para o relatório */
+        .report-item {
+            background-color: #3C3C3C; /* Fundo mais escuro para cada item do relatório */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #555555;
+            text-align: left; /* Garante que o texto de cada item esteja à esquerda */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+        }
+        .report-item p {
+            margin-bottom: 0.5rem;
+            color: #E0E0E0; /* Cor do texto dentro dos itens do relatório */
+            word-wrap: break-word; /* Garante que textos longos quebrem a linha */
+        }
+        .report-item p:last-child {
+            margin-bottom: 0;
+        }
+        .report-item strong {
+            color: #FFD700; /* Destaque em ouro para os rótulos */
+        }
+        .report-item .value {
+            color: #AAAAAA; /* Valor do dado em cinza claro */
+        }
+
+        /* Estilos de texto para os parágrafos e títulos */
+        .text-xl.font-semibold.text-gray-800 {
+            color: #FFD700 !important; /* Cor ouro forçada para esses títulos */
+        }
+        .text-gray-600.leading-relaxed {
+            color: #AAAAAA !important; /* Cinza claro para legibilidade no fundo escuro */
+        }
+
+        /* Estilos do Spinner */
+        .hidden-spinner {
+            display: none !important;
+        }
+
+        #loadingSpinner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .spinner {
+            border: 8px solid #3C3C3C;
+            border-top: 8px solid #FFD700;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Estilos para o dropdown dentro do item de relatório */
+        .input-box {
+            background-color: #4C4C4C; /* Fundo mais escuro para inputs/selects */
+            border: 1px solid #5C5C5C;
+            color: #E0E0E0; /* Cor do texto dentro do input */
+            padding: 0.8rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            box-sizing: border-box; /* Inclui padding e borda no tamanho total */
+            transition: border-color 0.3s, box-shadow 0.3s;
+            -webkit-appearance: none; /* Remove estilo padrão do navegador para select */
+            -moz-appearance: none; /* Remove estilo padrão do navegador para select */
+            appearance: none; /* Remove estilo padrão do navegador para select */
+            padding-right: 2.5rem; /* Espaço para a seta customizada */
+        }
+        .input-box:focus {
+            outline: none;
+            border-color: #FFD700; /* Ouro ao focar */
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.3); /* Sombra de foco dourada */
+        }
+        /* Estilo para o wrapper do select para adicionar uma seta customizada */
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 0.5rem; /* Espaçamento após o label */
+        }
+        .select-wrapper::after {
+            content: '▼'; /* Caractere de seta */
+            font-size: 0.8em;
+            color: #FFD700; /* Cor da seta em ouro */
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            position: absolute;
+            pointer-events: none; /* Garante que a seta não capture cliques */
+        }
+
+        /* Estilos do Modal de Detalhes */
+        #detailsModal {
+            backdrop-filter: blur(8px); /* Efeito de blur no fundo */
+            -webkit-backdrop-filter: blur(8px);
+        }
+        #detailsModal .screen-container {
+            padding: 2.5rem; /* Ajuste o padding para o modal */
+        }
+
+        /* Estilo para o botão de exclusão */
+        .delete-button {
+            /* Classes Tailwind CSS */
+            @apply mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 w-full; 
+        }
+
+        /* Container para a Ordem e Nome para usar Flexbox */
+        .order-name-container {
+            display: flex;
+            justify-content: space-between; /* Alinha o primeiro item à esquerda e o último à direita */
+            align-items: baseline; /* Alinha pela base do texto */
+            margin-bottom: 0.5rem; /* Espaçamento entre este container e o próximo parágrafo */
+        }
+
+        /* Para o número da ordem */
+        .order-number {
+            font-size: 0.9em; /* Um pouco menor */
+            color: #FFD700; /* Cor ouro para destaque */
+            font-weight: 600; /* Um pouco mais negrito */
+            white-space: nowrap; /* Evita quebra de linha em números longos */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="screen-container" id="reportScreen">
+
+        <div class="mb-10">
+            <img src="logo.png" alt="Logo Lex Juris" width="160" height="160" class="mx-auto mb-4">
+            <div class="logo-text">LEX JURIS</div>
+            <div class="tagline">Assessoria Jurídica</div>
+        </div>
+
+        <div class="message-container">
+            <p class="text-xl font-semibold text-gray-800 mb-4 text-center">Relatório de Prospecções</p>
+            <p class="text-gray-600 leading-relaxed text-center mb-6">
+                Aqui você encontrará o registro das prospecções realizadas. Clique em um item para ver detalhes.
+            </p>
+        </div>
+
+        <div id="reportDataContainer" class="text-left space-y-4">
+            <p id="noDataMessage" class="text-gray-600 text-center hidden">Nenhuma prospecção encontrada ainda.</p>
+            <p id="errorMessage" class="text-red-400 text-center hidden">Ocorreu um erro ao carregar os dados. Por favor, tente novamente.</p>
+        </div>
+
+        <button id="refreshReportBtn" class="main-button mt-8">
+            Atualizar Relatório
+        </button>
+    </div>
+
+    <div id="detailsModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="screen-container max-w-lg w-full relative">
+            <button id="closeDetailsModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
+            
+            <h3 class="text-2xl font-bold text-yellow-400 mb-6 text-center">Detalhes da Prospecção</h3>
+
+            <div class="text-left space-y-4 mb-6">
+                <p class="text-gray-300"><strong>Ordem:</strong> <span id="detailOrdem" class="text-gray-400"></span></p>
+                <p class="text-xl font-bold text-yellow-300 mb-2" id="detailNome"></p>
+                <p class="text-gray-300"><strong>Telefone:</strong> <span id="detailTelefone" class="text-gray-400"></span></p>
+                <p class="text-gray-300"><strong>Causa Judicial:</strong> <span id="detailCausa" class="text-gray-400"></span></p>
+                <p class="text-gray-300"><strong>Outro:</strong> <span id="detailOutro" class="text-gray-400"></span></p>
+                <p class="text-gray-300"><strong>Status (campo1):</strong> <span id="detailcampo1" class="text-gray-400"></span></p>
+                <p class="text-gray-300"><strong>Data/Hora Registro:</strong> <span id="detailDataHora" class="text-gray-400"></span></p>
+
+            </div>
+
+            <button id="closeDetailsBtnBottom" class="main-button">Fechar</button>
+        </div>
+    </div>
+
+    <div id="loadingSpinner" class="hidden-spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const reportDataContainer = document.getElementById('reportDataContainer');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const refreshReportBtn = document.getElementById('refreshReportBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            // Elementos do Modal de Detalhes
+            const detailsModal = document.getElementById('detailsModal');
+            const closeDetailsModalBtn = document.getElementById('closeDetailsModalBtn');
+            const closeDetailsBtnBottom = document.getElementById('closeDetailsBtnBottom');
+            const detailOrdem = document.getElementById('detailOrdem');
+            const detailNome = document.getElementById('detailNome');
+            const detailTelefone = document.getElementById('detailTelefone');
+            const detailCausa = document.getElementById('detailCausa');
+            const detailOutro = document.getElementById('detailOutro');
+            const detailcampo1 = document.getElementById('detailcampo1');
+            // REMOVIDOS OS GETELEMENTBYID PARA CAMPO2 A CAMPO5
+            const detailDataHora = document.getElementById('detailDataHora');
+
+
+            // IMPORTANTE: COLOQUE A URL DO SEU WEB APP AQUI (a que você copiou após a implantação)
+            // Certifique-se de que esta URL está ATUALIZADA após a última implantação do seu Apps Script.
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz2v5z_tFYQF7TD4zZQr7RzBwmuF_fMcLI-rDaEXjYNnXL6Aa_r7fHjcRjIOW9NDZXx/exec'; 
+
+            // --- FUNÇÕES AUXILIARES PARA MOSTRAR/ESCONDER SPINNER ---
+            function showSpinner() {
+                loadingSpinner.classList.remove('hidden-spinner');
+            }
+
+            function hideSpinner() {
+                loadingSpinner.classList.add('hidden-spinner');
+            }
+
+            // --- FUNÇÃO PARA FORMATAR TELEFONE ---
+            const formatarTelefoneExibicao = (telefone) => {
+                if (!telefone) return '';
+                let value = String(telefone).replace(/\D/g, ''); 
+                let formattedValue = '';
+
+                if (value.length > 0) {
+                    formattedValue = '(' + value.substring(0, 2);
+                }
+                if (value.length > 2) {
+                    if (value.length === 11) { 
+                        formattedValue += ') ' + value.substring(2, 7);
+                        if (value.length > 7) {
+                            formattedValue += '-' + value.substring(7, 11);
+                        }
+                    } else { 
+                        formattedValue += ') ' + value.substring(2, 6);
+                        if (value.length > 6) {
+                            formattedValue += '-' + value.substring(6, 10);
+                        }
+                    }
+                }
+                return formattedValue;
+            };
+
+            // --- NOVA FUNÇÃO: FORMATAR NÚMERO DA ORDEM COM ZEROS À ESQUERDA ---
+            const formatarOrdem = (ordem) => {
+                // Converte para string e preenche com zeros à esquerda até 4 dígitos
+                return String(ordem || '').padStart(4, '0');
+            };
+
+            // --- FUNÇÃO PARA ATUALIZAR campo1 NA PLANILHA ---
+            async function updatecampo1(rowIndex, newcampo1Value) {
+                showSpinner();
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            action: 'updatecampo1', 
+                            rowIndex: rowIndex,
+                            newcampo1Value: newcampo1Value
+                        }).toString()
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Erro na rede ou servidor: ${response.status} ${response.statusText} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('Resposta da atualização:', result);
+
+                    if (result.success) {
+                        console.log('Status atualizado com sucesso!');
+                        // Recarregar os dados para refletir a mudança imediatamente
+                        loadReportData(); 
+                    } else {
+                        alert('Erro ao atualizar o status: ' + result.message);
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao enviar a atualização:', error);
+                    alert('Ocorreu um erro ao tentar salvar as alterações. Tente novamente.');
+                } finally {
+                    hideSpinner();
+                }
+            }
+
+            // --- FUNÇÃO PARA EXCLUIR LINHA NA PLANILHA ---
+            async function deleteRow(rowIndex, nomeCliente, ordemCliente) {
+                if (!confirm(`Tem certeza que deseja excluir a prospecção de "${nomeCliente}" (Ordem: ${formatarOrdem(ordemCliente)})?`)) { // Use a formatação aqui também
+                    return; // Aborta se o usuário cancelar
+                }
+
+                showSpinner();
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            action: 'deleteRow', // Ação para o Apps Script
+                            rowIndex: rowIndex
+                        }).toString()
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Erro na rede ou servidor: ${response.status} ${response.statusText} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('Resposta da exclusão:', result);
+
+                    if (result.success) {
+                        alert('Registro excluído com sucesso!');
+                        loadReportData(); // Recarrega os dados para remover o card excluído
+                    } else {
+                        alert('Erro ao excluir o registro: ' + result.message);
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao enviar a exclusão:', error);
+                    alert('Ocorreu um erro ao tentar excluir o registro. Tente novamente.');
+                } finally {
+                    hideSpinner();
+                }
+            }
+
+
+            // --- FUNÇÃO PARA CARREGAR E EXIBIR OS DADOS ---
+            async function loadReportData() {
+                reportDataContainer.innerHTML = ''; 
+                noDataMessage.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+                showSpinner();
+
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Erro na rede ou servidor: ${response.status} ${response.statusText} - ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('Dados recebidos do Apps Script:', result);
+
+                    if (result.success && result.data && result.data.length > 0) {
+                        result.data.forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.classList.add('report-item');
+                            itemDiv.style.cursor = 'pointer'; 
+                            itemDiv.setAttribute('data-row-index', item.rowIndex); 
+                            
+                            // Armazena todos os dados do item diretamente para facilitar o modal
+                            itemDiv.dataset.itemData = JSON.stringify(item);
+
+                            // --- CAMPOS AGORA SÃO TODOS EM MINÚSCULAS ---
+                            const ordem = item.ordem; // Não formatar aqui, formatar na exibição
+                            const nome = item.nome || 'N/A';             
+                            const telefone = item.telefone ? formatarTelefoneExibicao(item.telefone) : 'N/A'; 
+                            const causa = item.causa || 'N/A';            
+                            const outro = item.outro || '';               
+                            const campo1Atual = item.campo1 || '';       
+                            // REMOVIDOS OS CAMPOS DE DADOS PARA CAMPO2 A CAMPO5
+                            const dataHora = item.datahora ? new Date(item.datahora).toLocaleString('pt-BR') : 'N/A'; 
+
+                            const dropdownHtml = `
+                                <div class="mt-4">
+                                    <label for="campo1-${item.rowIndex}" class="form-label text-sm text-gray-400">Status da Prospecção:</label>
+                                    <div class="select-wrapper">
+                                        <select id="campo1-${item.rowIndex}" class="input-box select-campo1" data-row-index="${item.rowIndex}">
+                                            <option value="" disabled ${campo1Atual === '' ? 'selected' : ''}>Selecione um status</option>
+                                            <option value="Opção1" ${campo1Atual === 'Opção1' ? 'selected' : ''}>Cliente já Contactado</option>
+                                            <option value="Opção2" ${campo1Atual === 'Opção2' ? 'selected' : ''}>Cliente Agendou Visita</option>
+                                            <option value="Opção3" ${campo1Atual === 'Opção3' ? 'selected' : ''}>Contato Inválido</option>
+                                            <option value="Opção4" ${campo1Atual === 'Opção4' ? 'selected' : ''}>Cliente Contatado com Sucesso</option>
+                                            <option value="Opção5" ${campo1Atual === 'Opção5' ? 'selected' : ''}>Cliente Desistiu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            `;
+
+                            itemDiv.innerHTML = `
+                                <div class="order-name-container">
+                                    <p class="text-xl font-semibold text-yellow-300"><strong>${nome}</strong></p> 
+                                    <p class="order-number">#${formatarOrdem(ordem)}</p>
+                                </div>
+                                <p><strong>Telefone:</strong> <span class="value">${telefone}</span></p>
+                                <p><strong>Causa Judicial:</strong> <span class="value">${causa}</span></p>
+                                ${outro ? `<p><strong>Outro:</strong> <span class="value">${outro}</span></p>` : ''}
+                                ${dropdownHtml} 
+                                <p class="mt-4 text-xs text-gray-500 text-right">Registrado em: ${dataHora}</p>
+                                <button class="delete-button mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200" data-row-index="${item.rowIndex}" data-nome-cliente="${nome}" data-ordem-cliente="${ordem}">
+                                    Excluir
+                                </button>
+                            `;
+                            reportDataContainer.appendChild(itemDiv);
+
+                            const selectElement = itemDiv.querySelector(`.select-campo1`);
+                            selectElement.addEventListener('click', (event) => {
+                                event.stopPropagation(); 
+                            });
+                            selectElement.addEventListener('change', (event) => {
+                                const rowIndex = event.target.dataset.rowIndex;
+                                const newcampo1Value = event.target.value;
+                                updatecampo1(rowIndex, newcampo1Value);
+                            });
+
+                            const deleteButton = itemDiv.querySelector('.delete-button');
+                            deleteButton.addEventListener('click', async (event) => {
+                                event.stopPropagation(); 
+                                const rowIndexToDelete = event.target.dataset.rowIndex;
+                                const nomeCliente = event.target.dataset.nomeCliente;
+                                const ordemCliente = event.target.dataset.ordemCliente;
+                                await deleteRow(rowIndexToDelete, nomeCliente, ordemCliente);
+                            });
+
+                            itemDiv.addEventListener('click', (event) => {
+                                if (!event.target.classList.contains('delete-button') && !event.target.closest('.select-wrapper')) {
+                                    openDetailsModal(item);
+                                }
+                            });
+                        });
+                        
+                        reportDataContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    } else if (result.success && result.data && result.data.length === 0) {
+                        noDataMessage.classList.remove('hidden');
+                    } else {
+                        errorMessage.classList.remove('hidden');
+                        console.error('Erro nos dados recebidos:', result.message || 'Dados inválidos');
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao carregar os dados do relatório:', error);
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    hideSpinner();
+                }
+            }
+
+            // --- FUNÇÃO PARA ABRIR O MODAL DE DETALHES ---
+            function openDetailsModal(itemData) {
+                detailOrdem.textContent = itemData.ordem || 'N/A'; 
+                detailNome.textContent = itemData.nome || 'N/A';
+                detailTelefone.textContent = itemData.telefone ? formatarTelefoneExibicao(itemData.telefone) : 'N/A';
+                detailCausa.textContent = itemData.causa || 'N/A';
+                detailOutro.textContent = itemData.outro || 'N/A';
+                detailcampo1.textContent = itemData.campo1 || 'Não Definido'; 
+                // REMOVIDOS OS CAMPOS DE DETALHE PARA CAMPO2 A CAMPO5
+                detailDataHora.textContent = itemData.datahora ? new Date(itemData.datahora).toLocaleString('pt-BR') : 'N/A';
+
+                detailsModal.classList.remove('hidden');
+            }
+
+            // --- FUNÇÕES PARA FECHAR O MODAL DE DETALHES ---
+            closeDetailsModalBtn.addEventListener('click', () => {
+                detailsModal.classList.add('hidden');
+            });
+            
+            closeDetailsBtnBottom.addEventListener('click', () => {
+                detailsModal.classList.add('hidden');
+            });
+
+
+            // Carregar os dados ao iniciar a página
+            loadReportData();
+
+            // Adicionar listener ao botão de atualizar relatório
+            refreshReportBtn.addEventListener('click', loadReportData);
+        });
+    </script>
+
+</body>
+</html>
