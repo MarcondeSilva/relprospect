@@ -252,8 +252,8 @@
                 <p class="text-xl font-bold text-yellow-300 mb-2" id="detailNome"></p>
                 <p class="text-gray-300"><strong>Telefone:</strong> <span id="detailTelefone" class="text-gray-400"></span></p>
                 <p class="text-gray-300"><strong>Causa Judicial:</strong> <span id="detailCausa" class="text-gray-400"></span></p>
-                <p class="text-gray-300"><strong>Outro:</strong> <span id="detailOutro" class="text-gray-400"></span></p>
-                <p class="text-gray-300"><strong>Status (campo1):</strong> <span id="detailcampo1" class="text-gray-400"></span></p>
+                <p class="text-gray-300"><strong>  </strong> <span id="detailOutro" class="text-gray-400"></span></p>
+                <p class="text-gray-300"><strong>Status:</strong> <span id="detailcampo1" class="text-gray-400"></span></p>
                 <p class="text-gray-300"><strong>Data/Hora Registro:</strong> <span id="detailDataHora" class="text-gray-400"></span></p>
 
             </div>
@@ -464,11 +464,11 @@
                                     <div class="select-wrapper">
                                         <select id="campo1-${item.rowIndex}" class="input-box select-campo1" data-row-index="${item.rowIndex}">
                                             <option value="" disabled ${campo1Atual === '' ? 'selected' : ''}>Selecione um status</option>
-                                            <option value="Opção1" ${campo1Atual === 'Opção1' ? 'selected' : ''}>Cliente já Contactado</option>
-                                            <option value="Opção2" ${campo1Atual === 'Opção2' ? 'selected' : ''}>Cliente Agendou Visita</option>
-                                            <option value="Opção3" ${campo1Atual === 'Opção3' ? 'selected' : ''}>Contato Inválido</option>
-                                            <option value="Opção4" ${campo1Atual === 'Opção4' ? 'selected' : ''}>Cliente Contatado com Sucesso</option>
-                                            <option value="Opção5" ${campo1Atual === 'Opção5' ? 'selected' : ''}>Cliente Desistiu</option>
+                                            <option value="Cliente já Contactado" ${campo1Atual === 'Cliente já Contactado' ? 'selected' : ''}>Cliente já Contactado</option>
+                                            <option value="Cliente Agendou Visita" ${campo1Atual === 'Cliente Agendou Visita' ? 'selected' : ''}>Cliente Agendou Visita</option>
+                                            <option value="Contato Inválido" ${campo1Atual === 'Contato Inválido' ? 'selected' : ''}>Contato Inválido</option>
+                                            <option value="Cliente Contatado com Sucesso" ${campo1Atual === 'Cliente Contatado com Sucesso' ? 'selected' : ''}>Cliente Contatado com Sucesso</option>
+                                            <option value="Cliente Desistiu da Ação" ${campo1Atual === 'Cliente Desistiu da Ação' ? 'selected' : ''}>Cliente Desistiu da Ação</option>
                                         </select>
                                     </div>
                                 </div>
@@ -539,7 +539,7 @@
                 detailNome.textContent = itemData.nome || 'N/A';
                 detailTelefone.textContent = itemData.telefone ? formatarTelefoneExibicao(itemData.telefone) : 'N/A';
                 detailCausa.textContent = itemData.causa || 'N/A';
-                detailOutro.textContent = itemData.outro || 'N/A';
+                detailOutro.textContent = itemData.outro || ' ';
                 detailcampo1.textContent = itemData.campo1 || 'Não Definido'; 
                 // REMOVIDOS OS CAMPOS DE DETALHE PARA CAMPO2 A CAMPO5
                 detailDataHora.textContent = itemData.datahora ? new Date(itemData.datahora).toLocaleString('pt-BR') : 'N/A';
