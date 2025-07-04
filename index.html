@@ -64,7 +64,7 @@
         }
 
         .logo-img { /* Estilo específico para a logo */
-            width: 270px;
+            width: 90px;
             height: 90px;
             flex-shrink: 0; /* Impede que a imagem encolha */
         }
@@ -235,6 +235,56 @@
             font-weight: 600; /* Um pouco mais negrito */
             white-space: nowrap; /* Evita quebra de linha em números longos */
         }
+
+        /* Estilos para os filtros */
+        .filter-container {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .filter-container label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #E0E0E0;
+            font-weight: 500;
+        }
+        .filter-group { /* Para agrupar filtros de data */
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap; /* Permite que os itens quebrem a linha se não houver espaço */
+        }
+        .filter-group > div {
+            flex: 1; /* Faz com que os itens do grupo ocupem espaço igual em telas maiores */
+            min-width: calc(50% - 0.5rem); /* Garante que em telas menores, cada um ocupe quase metade */
+        }
+
+        /* Media query para telas menores que 640px (pode ajustar o breakpoint) */
+        @media (max-width: 640px) {
+            .filter-group {
+                flex-direction: column; /* Coloca os campos de data em coluna em telas menores */
+                gap: 0.75rem; /* Diminui o espaçamento entre eles */
+            }
+            .filter-group > div {
+                min-width: 100%; /* Cada campo de data ocupa a largura total */
+            }
+            .input-box {
+                padding: 0.7rem 0.9rem; /* Diminui um pouco o padding dos inputs em geral */
+            }
+            .screen-container {
+                padding: 2rem 1rem; /* Ajusta o padding do container principal para telas menores */
+                border-radius: 1rem; /* Ajusta o arredondamento */
+            }
+            .logo-img {
+                width: 70px;
+                height: 70px;
+            }
+            .logo-text {
+                font-size: 1.3rem;
+            }
+            .tagline {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -242,18 +292,45 @@
     <div class="screen-container" id="reportScreen">
 
         <div class="mb-10">
-            <div class="header-main-content"> <img src="logo1.png" alt="Logo Lex Juris" class="logo-img">
-                <div class="header-text-block"> <div class="logo-text"> </div>
-                    <div class="tagline"> </div>
+            <div class="header-main-content"> <img src="logo.png" alt="Logo Lex Juris" class="logo-img">
+                <div class="header-text-block"> <div class="logo-text">LEX JURIS</div>
+                    <div class="tagline">Assessoria Jurídica</div>
                 </div>
             </div>
         </div>
 
         <div class="message-container">
-            <p class="text-xl font-semibold text-gray-800 mb-4 text-center">Relatório de Prospecções</p>
+            <p class="text-xl font-semibold text-gray-800 mb-4 text-center">
+                Relatório de Prospecções <span id="recordCount" class="text-yellow-400 text-base">(0 Registros)</span>
+            </p>
             <p class="text-gray-600 leading-relaxed text-center mb-6">
                 Aqui você encontrará o registro das prospecções realizadas. Clique em um item para ver detalhes.
             </p>
+        </div>
+
+        <div class="filter-container">
+            <label for="statusFilter">Filtrar por Status:</label>
+            <div class="select-wrapper mb-4"> <select id="statusFilter" class="input-box">
+                    <option value="Todos">Todos os Status</option>
+                    <option value="Cliente já Contactado">Cliente já Contactado</option>
+                    <option value="Cliente Agendou Visita">Cliente Agendou Visita</option>
+                    <option value="Contato Inválido">Contato Inválido</option>
+                    <option value="Cliente Contatado com Sucesso">Cliente Contatado com Sucesso</option>
+                    <option value="Cliente Desistiu da Ação">Cliente Desistiu da Ação</option>
+                </select>
+            </div>
+
+            <label>Filtrar por Período de Registro:</label>
+            <div class="filter-group">
+                <div>
+                    <label for="dataInicioFilter" class="text-sm text-gray-400">De:</label>
+                    <input type="date" id="dataInicioFilter" class="input-box">
+                </div>
+                <div>
+                    <label for="dataFimFilter" class="text-sm text-gray-400">Até:</label>
+                    <input type="date" id="dataFimFilter" class="input-box">
+                </div>
+            </div>
         </div>
 
         <div id="reportDataContainer" class="text-left space-y-4">
@@ -292,13 +369,23 @@
     </div>
 
     <script>
+        // Adicionado: Verifica se o script já foi executado
+        if (window.__reportScriptLoaded) {
+            console.warn("Script de relatório já carregado. Ignorando múltiplas execuções.");
+        }
+        window.__reportScriptLoaded = true;
+
         document.addEventListener('DOMContentLoaded', function() {
             const reportDataContainer = document.getElementById('reportDataContainer');
             const noDataMessage = document.getElementById('noDataMessage');
             const errorMessage = document.getElementById('errorMessage');
             const refreshReportBtn = document.getElementById('refreshReportBtn');
             const loadingSpinner = document.getElementById('loadingSpinner');
-
+            const recordCountSpan = document.getElementById('recordCount'); 
+            const statusFilterSelect = document.getElementById('statusFilter'); 
+            const dataInicioFilter = document.getElementById('dataInicioFilter');
+            const dataFimFilter = document.getElementById('dataFimFilter');
+            
             // Elementos do Modal de Detalhes
             const detailsModal = document.getElementById('detailsModal');
             const closeDetailsModalBtn = document.getElementById('closeDetailsModalBtn');
@@ -350,10 +437,11 @@
                 return formattedValue;
             };
 
-            // --- NOVA FUNÇÃO: FORMATAR NÚMERO DA ORDEM COM ZEROS À ESQUERDA ---
+            // --- FUNÇÃO: FORMATAR NÚMERO DA ORDEM COM ZEROS À ESQUERDA ---
             const formatarOrdem = (ordem) => {
                 // Converte para string e preenche com zeros à esquerda até 4 dígitos
-                return String(ordem || '').padStart(4, '0');
+                // Garante que 'ordem' é um número antes de formatar
+                return String(parseInt(ordem, 10) || 0).padStart(4, '0');
             };
 
             // --- FUNÇÃO PARA ATUALIZAR campo1 NA PLANILHA ---
@@ -382,9 +470,10 @@
                     console.log('Resposta da atualização:', result);
 
                     if (result.success) {
-                        console.log('Status atualizado com sucesso!');
-                        // Recarregar os dados para refletir a mudança imediatamente
-                        loadReportData(); 
+                        console.log('Status atualizado com sucesso! Recarregando dados...');
+                        // Após a atualização, recarregue os dados para refletir a mudança
+                        // Passa os status e datas atuais dos filtros para manter a visualização
+                        loadReportData(statusFilterSelect.value, dataInicioFilter.value, dataFimFilter.value); 
                     } else {
                         alert('Erro ao atualizar o status: ' + result.message);
                     }
@@ -427,7 +516,8 @@
 
                     if (result.success) {
                         alert('Registro excluído com sucesso!');
-                        loadReportData(); 
+                        // Após a exclusão, recarregue os dados para remover o card
+                        loadReportData(statusFilterSelect.value, dataInicioFilter.value, dataFimFilter.value); 
                     } else {
                         alert('Erro ao excluir o registro: ' + result.message);
                     }
@@ -442,7 +532,9 @@
 
 
             // --- FUNÇÃO PARA CARREGAR E EXIBIR OS DADOS ---
-            async function loadReportData() {
+            async function loadReportData(filterStatus = 'Todos', filterDataInicio = '', filterDataFim = '') { 
+                console.log("Iniciando loadReportData com filtro de status:", filterStatus, " e datas:", filterDataInicio, " - ", filterDataFim);
+                recordCountSpan.textContent = '(0 Registros)'; 
                 reportDataContainer.innerHTML = ''; 
                 noDataMessage.classList.add('hidden');
                 errorMessage.classList.add('hidden');
@@ -462,85 +554,146 @@
                     const result = await response.json();
                     console.log('Dados recebidos do Apps Script:', result);
 
-                    if (result.success && result.data && result.data.length > 0) {
-                        result.data.forEach(item => {
-                            const itemDiv = document.createElement('div');
-                            itemDiv.classList.add('report-item');
-                            itemDiv.style.cursor = 'pointer'; 
-                            itemDiv.setAttribute('data-row-index', item.rowIndex); 
-                            
-                            itemDiv.dataset.itemData = JSON.stringify(item);
+                    if (result.success && result.data) {
+                        let filteredData = result.data;
 
-                            const ordem = item.ordem; 
-                            const nome = item.nome || 'N/A';            
-                            const telefone = item.telefone ? formatarTelefoneExibicao(item.telefone) : 'N/A'; 
-                            const causa = item.causa || 'N/A';          
-                            const outro = item.outro || '';             
-                            const campo1Atual = item.campo1 || '';     
-                            const dataHora = item.datahora ? new Date(item.datahora).toLocaleString('pt-BR') : 'N/A'; 
+                        // 1. Aplica o filtro de status
+                        if (filterStatus !== 'Todos' && filterStatus !== '') {
+                            filteredData = filteredData.filter(item => item.campo1 === filterStatus);
+                            console.log(`Dados filtrados por status "${filterStatus}":`, filteredData);
+                        }
 
-                            const dropdownHtml = `
-                                <div class="mt-4">
-                                    <label for="campo1-${item.rowIndex}" class="form-label text-sm text-gray-400">Status da Prospecção:</label>
-                                    <div class="select-wrapper">
-                                        <select id="campo1-${item.rowIndex}" class="input-box select-campo1" data-row-index="${item.rowIndex}">
-                                            <option value="" disabled ${campo1Atual === '' ? 'selected' : ''}>Selecione um status</option>
-                                            <option value="Cliente já Contactado" ${campo1Atual === 'Cliente já Contactado' ? 'selected' : ''}>Cliente já Contactado</option>
-                                            <option value="Cliente Agendou Visita" ${campo1Atual === 'Cliente Agendou Visita' ? 'selected' : ''}>Cliente Agendou Visita</option>
-                                            <option value="Contato Inválido" ${campo1Atual === 'Contato Inválido' ? 'selected' : ''}>Contato Inválido</option>
-                                            <option value="Cliente Contatado com Sucesso" ${campo1Atual === 'Cliente Contatado com Sucesso' ? 'selected' : ''}>Cliente Contatado com Sucesso</option>
-                                            <option value="Cliente Desistiu da Ação" ${campo1Atual === 'Cliente Desistiu da Ação' ? 'selected' : ''}>Cliente Desistiu da Ação</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            `;
+                        // 2. Aplica o filtro de data (se houver)
+                        if (filterDataInicio || filterDataFim) {
+                            const dataInicio = filterDataInicio ? new Date(filterDataInicio + 'T00:00:00') : null;
+                            const dataFim = filterDataFim ? new Date(filterDataFim + 'T23:59:59') : null;
 
-                            itemDiv.innerHTML = `
-                                <div class="order-name-container">
-                                    <p class="text-xl font-semibold text-yellow-300"><strong>${nome}</strong></p> 
-                                    <p class="order-number">#${formatarOrdem(ordem)}</p>
-                                </div>
-                                <p><strong>Telefone:</strong> <span class="value">${telefone}</span></p>
-                                <p><strong>Causa Judicial:</strong> <span class="value">${causa}</span></p>
-                                ${outro ? `<p><strong>Outro:</strong> <span class="value">${outro}</span></p>` : ''}
-                                ${dropdownHtml} 
-                                <p class="mt-4 text-xs text-gray-500 text-right">Registrado em: ${dataHora}</p>
-                                <button class="delete-button mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200" data-row-index="${item.rowIndex}" data-nome-cliente="${nome}" data-ordem-cliente="${ordem}">
-                                    Excluir
-                                </button>
-                            `;
-                            reportDataContainer.appendChild(itemDiv);
-
-                            const selectElement = itemDiv.querySelector(`.select-campo1`);
-                            selectElement.addEventListener('click', (event) => {
-                                event.stopPropagation(); 
-                            });
-                            selectElement.addEventListener('change', (event) => {
-                                const rowIndex = event.target.dataset.rowIndex;
-                                const newcampo1Value = event.target.value;
-                                updatecampo1(rowIndex, newcampo1Value);
-                            });
-
-                            const deleteButton = itemDiv.querySelector('.delete-button');
-                            deleteButton.addEventListener('click', async (event) => {
-                                event.stopPropagation(); 
-                                const rowIndexToDelete = event.target.dataset.rowIndex;
-                                const nomeCliente = event.target.dataset.nomeCliente;
-                                const ordemCliente = event.target.dataset.ordemCliente;
-                                await deleteRow(rowIndexToDelete, nomeCliente, ordemCliente);
-                            });
-
-                            itemDiv.addEventListener('click', (event) => {
-                                if (!event.target.classList.contains('delete-button') && !event.target.closest('.select-wrapper')) {
-                                    openDetailsModal(item);
+                            filteredData = filteredData.filter(item => {
+                                // item.datahora deve vir em um formato que Date() possa parsear (ex: "YYYY-MM-DD HH:MM:SS" ou timestamp)
+                                if (!item.datahora) {
+                                    console.warn("Item sem datahora:", item);
+                                    return false; // Ignora itens sem data de registro válida
                                 }
-                            });
-                        });
-                        
-                        reportDataContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-                    } else if (result.success && result.data && result.data.length === 0) {
-                        noDataMessage.classList.remove('hidden');
+                                const itemDate = new Date(item.datahora);
+                                
+                                // Verifica se a data é válida
+                                if (isNaN(itemDate.getTime())) {
+                                    console.warn("Data de registro inválida para o item:", item.datahora, item);
+                                    return false; 
+                                }
+                                
+                                let passaNoFiltro = true;
+
+                                if (dataInicio && itemDate < dataInicio) {
+                                    passaNoFiltro = false;
+                                }
+                                if (dataFim && itemDate > dataFim) {
+                                    passaNoFiltro = false;
+                                }
+                                return passaNoFiltro;
+                            });
+                            console.log(`Dados filtrados por data (${filterDataInicio} a ${filterDataFim}):`, filteredData);
+                        }
+
+
+                        recordCountSpan.textContent = `(${filteredData.length} Registros)`; 
+
+                        if (filteredData.length > 0) {
+                            filteredData.forEach(item => {
+                                const cardId = `report-item-${item.rowIndex}`;
+                                
+                                // Esta verificação de ID no DOM é para evitar duplicação em cenários específicos,
+                                // mas se loadReportData limpa o container, ela pode ser menos crítica.
+                                // Mantenho por segurança.
+                                if (document.getElementById(cardId)) {
+                                    console.log(`Card com ID ${cardId} já existe. Ignorando criação duplicada.`);
+                                    return; 
+                                }
+
+                                const itemDiv = document.createElement('div');
+                                itemDiv.classList.add('report-item');
+                                itemDiv.style.cursor = 'pointer'; 
+                                itemDiv.id = cardId; 
+                                itemDiv.setAttribute('data-row-index', item.rowIndex); 
+                                
+                                itemDiv.dataset.itemData = JSON.stringify(item);
+
+                                const ordem = item.ordem; // <--- AQUI É O PONTO CRÍTICO: GARANTIR QUE 'item.ordem' VENHA CORRETO DO APPS SCRIPT
+                                // Adicionado log para verificar o valor da ordem antes de renderizar
+                                console.log(`Processando item com Ordem: ${ordem}, Nome: ${item.nome}, rowIndex: ${item.rowIndex}`);
+                                
+                                const nome = item.nome || 'N/A';            
+                                const telefone = item.telefone ? formatarTelefoneExibicao(item.telefone) : 'N/A'; 
+                                const causa = item.causa || 'N/A';          
+                                const outro = item.outro || '';             
+                                const campo1Atual = item.campo1 || '';     
+                                const dataHora = item.datahora ? new Date(item.datahora).toLocaleString('pt-BR') : 'N/A'; 
+
+                                const dropdownHtml = `
+                                    <div class="mt-4">
+                                        <label for="campo1-${item.rowIndex}" class="form-label text-sm text-gray-400">Status da Prospecção:</label>
+                                        <div class="select-wrapper">
+                                            <select id="campo1-${item.rowIndex}" class="input-box select-campo1" data-row-index="${item.rowIndex}">
+                                                <option value="" disabled ${campo1Atual === '' ? 'selected' : ''}>Selecione um status</option>
+                                                <option value="Cliente já Contactado" ${campo1Atual === 'Cliente já Contactado' ? 'selected' : ''}>Cliente já Contactado</option>
+                                                <option value="Cliente Agendou Visita" ${campo1Atual === 'Cliente Agendou Visita' ? 'selected' : ''}>Cliente Agendou Visita</option>
+                                                <option value="Contato Inválido" ${campo1Atual === 'Contato Inválido' ? 'selected' : ''}>Contato Inválido</option>
+                                                <option value="Cliente Contatado com Sucesso" ${campo1Atual === 'Cliente Contatado com Sucesso' ? 'selected' : ''}>Cliente Contatado com Sucesso</option>
+                                                <option value="Cliente Desistiu da Ação" ${campo1Atual === 'Cliente Desistiu da Aação' ? 'selected' : ''}>Cliente Desistiu da Ação</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                `;
+
+                                itemDiv.innerHTML = `
+                                    <div class="order-name-container">
+                                        <p class="text-xl font-semibold text-yellow-300"><strong>${nome}</strong></p> 
+                                        <p class="order-number">#${formatarOrdem(ordem)}</p>
+                                    </div>
+                                    <p><strong>Telefone:</strong> <span class="value">${telefone}</span></p>
+                                    <p><strong>Causa Judicial:</strong> <span class="value">${causa}</span></p>
+                                    ${outro ? `<p><strong>Outro:</strong> <span class="value">${outro}</span></p>` : ''}
+                                    ${dropdownHtml} 
+                                    <p class="mt-4 text-xs text-gray-500 text-right">Registrado em: ${dataHora}</p>
+                                    <button class="delete-button mt-4" data-row-index="${item.rowIndex}" data-nome-cliente="${nome}" data-ordem-cliente="${ordem}">
+                                        Excluir
+                                    </button>
+                                `;
+                                reportDataContainer.appendChild(itemDiv);
+
+                                const selectElement = itemDiv.querySelector(`.select-campo1`);
+                                selectElement.addEventListener('click', (event) => {
+                                    event.stopPropagation(); 
+                                });
+                                selectElement.addEventListener('change', (event) => {
+                                    const rowIndex = event.target.dataset.rowIndex;
+                                    const newcampo1Value = event.target.value;
+                                    updatecampo1(rowIndex, newcampo1Value);
+                                });
+
+                                const deleteButton = itemDiv.querySelector('.delete-button');
+                                deleteButton.addEventListener('click', async (event) => {
+                                    event.stopPropagation(); 
+                                    const rowIndexToDelete = event.target.dataset.rowIndex;
+                                    const nomeCliente = event.target.dataset.nomeCliente;
+                                    const ordemCliente = event.target.dataset.ordemCliente;
+                                    await deleteRow(rowIndexToDelete, nomeCliente, ordemCliente);
+                                });
+
+                                itemDiv.addEventListener('click', (event) => {
+                                    if (!event.target.classList.contains('delete-button') && !event.target.closest('.select-wrapper')) {
+                                        openDetailsModal(item);
+                                    }
+                                });
+                            });
+                            
+                            reportDataContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                        } else { 
+                            noDataMessage.classList.remove('hidden');
+                        }
+
                     } else {
                         errorMessage.classList.remove('hidden');
                         console.error('Erro nos dados recebidos:', result.message || 'Dados inválidos');
@@ -556,7 +709,7 @@
 
             // --- FUNÇÃO PARA ABRIR O MODAL DE DETALHES ---
             function openDetailsModal(itemData) {
-                detailOrdem.textContent = itemData.ordem || 'N/A'; 
+                detailOrdem.textContent = formatarOrdem(itemData.ordem) || 'N/A'; 
                 detailNome.textContent = itemData.nome || 'N/A';
                 detailTelefone.textContent = itemData.telefone ? formatarTelefoneExibicao(itemData.telefone) : 'N/A';
                 detailCausa.textContent = itemData.causa || 'N/A';
@@ -577,11 +730,26 @@
             });
 
 
-            // Carregar os dados ao iniciar a página
-            loadReportData();
+            // Carregar os dados ao iniciar a página (com os filtros atuais)
+            loadReportData(statusFilterSelect.value, dataInicioFilter.value, dataFimFilter.value);
 
             // Adicionar listener ao botão de atualizar relatório
-            refreshReportBtn.addEventListener('click', loadReportData);
+            refreshReportBtn.addEventListener('click', () => loadReportData(statusFilterSelect.value, dataInicioFilter.value, dataFimFilter.value));
+
+            // Adicionar listener ao filtro de status
+            statusFilterSelect.addEventListener('change', (event) => {
+                loadReportData(event.target.value, dataInicioFilter.value, dataFimFilter.value);
+            });
+
+            // Adicionar listeners para os campos de data
+            dataInicioFilter.addEventListener('change', () => {
+                loadReportData(statusFilterSelect.value, dataInicioFilter.value, dataFimFilter.value);
+            });
+
+            dataFimFilter.addEventListener('change', () => {
+                loadReportData(statusFilterSelect.value, dataInicioFilter.value, dataFimFilter.value);
+            });
+
         });
     </script>
 
